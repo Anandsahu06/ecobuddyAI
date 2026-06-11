@@ -125,9 +125,9 @@ export default function ProfilePage() {
             <div className="space-y-4">
               {/* Diet setting */}
               <div>
-                <label className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wide font-mono">
+                <span className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wide font-mono">
                   Base Dietary Preference
-                </label>
+                </span>
                 <div className="grid grid-cols-4 gap-2">
                   {["omnivore", "flexitarian", "vegetarian", "vegan"].map((opt) => (
                     <button
@@ -148,9 +148,9 @@ export default function ProfilePage() {
 
               {/* Commute setting */}
               <div>
-                <label className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wide font-mono">
+                <span className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wide font-mono">
                   Primary Commute Mode
-                </label>
+                </span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { key: "drive", label: "🚘 Passenger Car" },
@@ -340,6 +340,7 @@ export default function ProfilePage() {
                 <input
                   type="range"
                   id="profile-b2b-seats-slider"
+                  aria-label="Total corporate seats"
                   min="10"
                   max="1000"
                   step="10"

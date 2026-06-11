@@ -284,46 +284,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [isCloudActive, deviceUserId, isConnectionChecking]);
 
-  // Sync logs from Firestore subcollection for the active profile (with LocalStorage fallback)
+  // Sync logs from Firestore subcollection for the active profile (Online mode)
   useEffect(() => {
-    if (!currentProfileId) {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect */
-      setLogs([]);
+    if (!currentProfileId || !isCloudActive || !db) {
+      if (!currentProfileId) {
+        /* eslint-disable-next-line react-hooks/set-state-in-effect */
+        setLogs([]);
+      }
       return;
     }
 
-    if (isCloudActive && db) {
-      const logsRef = collection(db, "users", currentProfileId, "activities");
-      const unsubscribe = onSnapshot(
-        logsRef,
-        (snapshot) => {
-          const logsList: ActivityLog[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            logsList.push({
-              id: doc.id,
-              rawInput: data.rawInput || "",
-              category: data.category || "None",
-              co2SavedKg: data.co2SavedKg || 0,
-              carbonPoints: Math.max(1, Math.round((data.co2SavedKg || 0) * 10)),
-              loggedAt: data.loggedAt || new Date().toISOString(),
-            });
+    const logsRef = collection(db, "users", currentProfileId, "activities");
+    const unsubscribe = onSnapshot(
+      logsRef,
+      (snapshot) => {
+        const logsList: ActivityLog[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          logsList.push({
+            id: doc.id,
+            rawInput: data.rawInput || "",
+            category: data.category || "None",
+            co2SavedKg: data.co2SavedKg || 0,
+            carbonPoints: Math.max(1, Math.round((data.co2SavedKg || 0) * 10)),
+            loggedAt: data.loggedAt || new Date().toISOString(),
           });
+        });
 
-          // Sort by date descending
-          logsList.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
-          setLogs(logsList);
-        },
-        (error) => {
-          console.error("Firestore activities listener error:", error);
-        }
-      );
+        // Sort by date descending
+        logsList.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+        setLogs(logsList);
+      },
+      (error) => {
+        console.error("Firestore activities listener error:", error);
+      }
+    );
 
-      return () => unsubscribe();
-    } else {
-      const activeProf = profiles.find((p) => p.id === currentProfileId);
-      setLogs(activeProf ? activeProf.logs || [] : []);
-    }
+    return () => unsubscribe();
+  }, [isCloudActive, currentProfileId]);
+
+  // Sync logs from LocalStorage fallback (Offline mode)
+  useEffect(() => {
+    if (isCloudActive || !currentProfileId) return;
+    const activeProf = profiles.find((p) => p.id === currentProfileId);
+    /* eslint-disable-next-line react-hooks/set-state-in-effect */
+    setLogs(activeProf ? activeProf.logs || [] : []);
   }, [isCloudActive, currentProfileId, profiles]);
 
   // Sync local changes to LocalStorage (only in offline/fallback mode)

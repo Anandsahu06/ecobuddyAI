@@ -3,10 +3,10 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { CarbonCalculationEngine } from "../../lib/carbon-calculator";
 
 // Local fallback parser to ensure the app works 100% offline or without API keys
-function localFallbackParser(text: string) {
+export function localFallbackParser(text: string) {
   const textLower = text.toLowerCase();
   
-  if (textLower.includes("walk") || textLower.includes("bike") || textLower.includes("cycle") || textLower.includes("run") || textLower.includes("bus") || textLower.includes("train") || textLower.includes("metro") || textLower.includes("transit") || textLower.includes("scooty") || textLower.includes("scooter") || textLower.includes("motorcycle") || textLower.includes("hybrid") || textLower.includes("electric car") || textLower.includes("ev ") || textLower.endsWith("ev") || textLower.includes("electric vehicle")) {
+  if (textLower.includes("walk") || textLower.includes("bike") || (textLower.includes("cycle") && !textLower.includes("recycle")) || textLower.includes("run") || textLower.includes("bus") || textLower.includes("train") || textLower.includes("metro") || textLower.includes("transit") || textLower.includes("scooty") || textLower.includes("scooter") || textLower.includes("motorcycle") || textLower.includes("hybrid") || textLower.includes("electric car") || textLower.includes("ev ") || textLower.endsWith("ev") || textLower.includes("electric vehicle")) {
     const numMatch = textLower.match(/\b\d+(\.\d+)?\b/);
     const dist = numMatch ? parseFloat(numMatch[0]) : 2;
     const isKm = textLower.includes("km") || textLower.includes("kilometer");
@@ -51,7 +51,7 @@ function localFallbackParser(text: string) {
     };
   }
 
-  if (textLower.includes("unplug") || textLower.includes("appliance") || textLower.includes("power") || textLower.includes("electricity") || textLower.includes("light") || textLower.includes("bulb") || textLower.includes("standby") || textLower.includes("heater") || textLower.includes("ac")) {
+  if (textLower.includes("unplug") || textLower.includes("appliance") || textLower.includes("power") || textLower.includes("electricity") || textLower.includes("light") || textLower.includes("bulb") || textLower.includes("standby") || textLower.includes("heater") || /\bac\b/.test(textLower)) {
     const saved = CarbonCalculationEngine.calculateElectricitySaved(1.0); // assume 1 kWh saved
     return {
       category: "Energy",

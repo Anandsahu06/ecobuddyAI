@@ -223,11 +223,12 @@ export default function ProfileSelector({ isCloudActive }: ProfileSelectorProps)
 
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wider font-mono">
+                  <label htmlFor="profile-name-input" className="block text-xs font-semibold text-text-primary mb-1.5 uppercase tracking-wider font-mono">
                     Profile Name
                   </label>
                   <input
                     type="text"
+                    id="profile-name-input"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Eco Hero, Green Warrior..."

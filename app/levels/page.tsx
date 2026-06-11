@@ -73,7 +73,7 @@ export default function LevelsPage() {
     };
 
     fetchLeaderboard();
-  }, [cumulativeXp, buddyLevel]);
+  }, [cumulativeXp, buddyLevel, currentProfile]);
 
   return (
     <Navigation>

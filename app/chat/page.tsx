@@ -56,7 +56,7 @@ export default function ChatPage() {
     const textLower = text.toLowerCase();
     
     // Check category: Transport
-    if (textLower.includes("walk") || textLower.includes("bike") || textLower.includes("cycle") || textLower.includes("run") || textLower.includes("bus") || textLower.includes("train") || textLower.includes("metro") || textLower.includes("transit") || textLower.includes("scooty") || textLower.includes("scooter") || textLower.includes("motorcycle") || textLower.includes("hybrid") || textLower.includes("electric car") || textLower.includes("ev ") || textLower.endsWith("ev") || textLower.includes("electric vehicle")) {
+    if (textLower.includes("walk") || textLower.includes("bike") || (textLower.includes("cycle") && !textLower.includes("recycle")) || textLower.includes("run") || textLower.includes("bus") || textLower.includes("train") || textLower.includes("metro") || textLower.includes("transit") || textLower.includes("scooty") || textLower.includes("scooter") || textLower.includes("motorcycle") || textLower.includes("hybrid") || textLower.includes("electric car") || textLower.includes("ev ") || textLower.endsWith("ev") || textLower.includes("electric vehicle")) {
       // Look for a number
       const numMatch = textLower.match(/\b\d+(\.\d+)?\b/);
       const dist = numMatch ? parseFloat(numMatch[0]) : 2; // default 2
@@ -66,7 +66,7 @@ export default function ChatPage() {
       let mode: "walking" | "cycling" | "bus" | "train" | "scooter" | "electric_scooter" | "hybrid" | "ev" = "walking";
       if (textLower.includes("bus")) mode = "bus";
       else if (textLower.includes("train") || textLower.includes("metro") || textLower.includes("transit")) mode = "train";
-      else if (textLower.includes("bike") || textLower.includes("cycle")) mode = "cycling";
+      else if (textLower.includes("bike") || (textLower.includes("cycle") && !textLower.includes("recycle"))) mode = "cycling";
       else if (textLower.includes("scooty") || textLower.includes("scooter") || textLower.includes("motorcycle")) {
         mode = textLower.includes("electric") ? "electric_scooter" : "scooter";
       } else if (textLower.includes("hybrid")) mode = "hybrid";
@@ -116,7 +116,7 @@ export default function ChatPage() {
     }
 
     // Check category: Energy
-    if (textLower.includes("unplug") || textLower.includes("appliance") || textLower.includes("power") || textLower.includes("electricity") || textLower.includes("light") || textLower.includes("bulb") || textLower.includes("standby") || textLower.includes("heater") || textLower.includes("ac")) {
+    if (textLower.includes("unplug") || textLower.includes("appliance") || textLower.includes("power") || textLower.includes("electricity") || textLower.includes("light") || textLower.includes("bulb") || textLower.includes("standby") || textLower.includes("heater") || /\bac\b/.test(textLower)) {
       const saved = 0.20;
       const points = 2;
       return {
@@ -357,6 +357,7 @@ export default function ChatPage() {
             <input
               type="text"
               id="chat-input-field"
+              aria-label="Type your carbon-saving action"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}

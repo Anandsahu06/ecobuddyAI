@@ -52,7 +52,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
 
         {/* Profile Selector Dropdown */}
         <div className="mb-4">
-          <label className="block text-[9px] font-mono font-bold text-text-secondary uppercase tracking-wider mb-1">
+          <label htmlFor="profile-select-desktop" className="block text-[9px] font-mono font-bold text-text-secondary uppercase tracking-wider mb-1">
             Active Profile
           </label>
           <select
@@ -125,6 +125,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
             value={currentProfileId}
             onChange={(e) => handleProfileChange(e.target.value)}
             id="profile-select-mobile"
+            aria-label="Active Profile"
             className="bg-transparent border-none text-xs font-bold text-brand-lime focus:outline-none cursor-pointer"
           >
             {profiles.map((p) => (
