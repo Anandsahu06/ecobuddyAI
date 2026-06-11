@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Award, ShieldAlert, Sparkles, Trophy, Lock, Info, Leaf } from "lucide-react";
+import { Award, Sparkles, Trophy, Lock, Info, Leaf } from "lucide-react";
 import { useApp } from "../context/app-context";
 import Navigation from "../components/navigation";
 

@@ -45,13 +45,14 @@ export default function DashboardPage() {
             Good morning, Eco Hero! 🌱
           </h1>
           <p className="text-text-secondary text-sm mt-1">
-            Your daily choices shape the future. Let's make today count.
+            Your daily choices shape the future. Let&apos;s make today count.
           </p>
         </div>
 
         {/* Dashboard CTA */}
         <Link
           href="/chat"
+          id="dashboard-log-cta"
           className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl glow-btn text-sm cursor-pointer"
         >
           <Plus className="w-5 h-5" />
@@ -256,6 +257,7 @@ export default function DashboardPage() {
                 resetState();
               }
             }}
+            id="dashboard-reset-db-btn"
             className="flex items-center justify-center gap-2 p-3 bg-red-950/20 border border-red-900/30 hover:bg-red-950/45 text-red-400 hover:text-red-300 rounded-xl text-xs cursor-pointer transition-colors"
           >
             <Trash2 className="w-4 h-4" />

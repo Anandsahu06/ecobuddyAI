@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 // Standard factors matching our science engine
 const GRID_KWH_CO2 = 0.370;
-const GAS_THERM_CO2 = 5.300;
 
 export async function POST(request: Request) {
   try {
@@ -57,15 +56,16 @@ export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const responseSchema: any = {
-      type: "object",
+      type: SchemaType.OBJECT,
       properties: {
-        providerName: { type: "string" },
-        billingPeriod: { type: "string" },
-        utilityType: { type: "string", description: "Electricity, Gas, or Water" },
-        consumptionValue: { type: "number", description: "Numeric value of consumption" },
-        unit: { type: "string", description: "kWh, Therms, Gallons, m3, etc." },
-        co2SavedKg: { type: "number", description: "Calculate carbon avoided by comparison: standard savings multiplier" }
+        providerName: { type: SchemaType.STRING },
+        billingPeriod: { type: SchemaType.STRING },
+        utilityType: { type: SchemaType.STRING, description: "Electricity, Gas, or Water" },
+        consumptionValue: { type: SchemaType.NUMBER, description: "Numeric value of consumption" },
+        unit: { type: SchemaType.STRING, description: "kWh, Therms, Gallons, m3, etc." },
+        co2SavedKg: { type: SchemaType.NUMBER, description: "Calculate carbon avoided by comparison: standard savings multiplier" }
       },
       required: ["providerName", "utilityType", "consumptionValue", "unit"]
     };
@@ -92,8 +92,9 @@ export async function POST(request: Request) {
 
     const parsedData = JSON.parse(result.response.text());
     return NextResponse.json({ ...parsedData, fallback: false });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Utility bill API error:", error);
-    return NextResponse.json({ error: error?.message || "Failed to parse utility bill" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Failed to parse utility bill";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

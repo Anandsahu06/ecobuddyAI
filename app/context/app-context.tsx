@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { CarbonCalculationEngine } from "../lib/carbon-calculator";
 import { LevelProgression } from "../lib/level-progression";
 import { db, isConfigured } from "../lib/firebase";
 import ProfileSelector from "../components/profile-selector";
@@ -26,7 +25,7 @@ export interface ActivityLog {
   carbonPoints: number;
   loggedAt: string;
   localDate?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface Badge {
@@ -58,6 +57,7 @@ export interface Skin {
 export interface Profile {
   id: string;
   name: string;
+  displayName?: string;
   carbonScore: number;
   buddyLevel: number;
   buddyXp: number;
@@ -154,6 +154,10 @@ const skinsCatalog: Skin[] = [
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const generateProfileId = () => `profile-${Date.now()}`;
+const generateLogId = () => `log-${Date.now()}`;
+const generateDeviceId = () => `dev-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentProfileId, setCurrentProfileId] = useState<string>("");
@@ -168,9 +172,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       let savedUid = localStorage.getItem("ecobuddy_device_user_id");
       if (!savedUid) {
-        savedUid = `dev-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+        savedUid = generateDeviceId();
         localStorage.setItem("ecobuddy_device_user_id", savedUid);
       }
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setDeviceUserId(savedUid);
 
       const checkFirebaseConnection = async () => {
@@ -193,7 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             
             clearTimeout(timeoutId);
             setIsCloudActive(true);
-          } catch (e) {
+          } catch {
             console.warn("⚠️ Firestore emulator is offline. Falling back to Local Sandbox.");
             setIsCloudActive(false);
           }
@@ -218,8 +223,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (savedProfiles) {
         const parsed = JSON.parse(savedProfiles);
+        /* eslint-disable-next-line react-hooks/set-state-in-effect */
         setProfiles(parsed);
-        if (savedActiveId && parsed.some((p: any) => p.id === savedActiveId)) {
+        if (savedActiveId && parsed.some((p: Profile) => p.id === savedActiveId)) {
           setCurrentProfileId(savedActiveId);
         } else if (parsed.length > 0) {
           setCurrentProfileId(parsed[0].id);
@@ -240,6 +246,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           profilesData.push({
             id: doc.id,
             name: data.name || "Eco Hero",
+            displayName: data.displayName || data.name || "Eco Hero",
             carbonScore: data.stats?.totalCo2SavedKg || 0,
             buddyLevel: data.buddy?.level || 1,
             buddyXp: data.buddy?.xp || 0,
@@ -280,6 +287,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Sync logs from Firestore subcollection for the active profile (with LocalStorage fallback)
   useEffect(() => {
     if (!currentProfileId) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect */
       setLogs([]);
       return;
     }
@@ -360,13 +368,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let updatedXp = currentProfile.buddyXp;
     let updatedLvl = currentProfile.buddyLevel;
     let neededXp = LevelProgression.getXpForLevel(updatedLvl);
-    let didLevelUp = false;
-
     while (updatedXp >= neededXp) {
       updatedXp -= neededXp;
       updatedLvl += 1;
       neededXp = LevelProgression.getXpForLevel(updatedLvl);
-      didLevelUp = true;
       needsUpdate = true;
     }
 
@@ -393,6 +398,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
       } else {
         // Offline update
+        /* eslint-disable-next-line react-hooks/set-state-in-effect */
         setProfiles((prevProfiles) => {
           const updated = prevProfiles.map((p) => {
             if (p.id !== currentProfileId) return p;
@@ -412,10 +418,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [isLoading, isConnectionChecking, currentProfileId, currentProfile, isCloudActive]);
 
   const createProfile = async (name: string) => {
-    const newId = `profile-${Date.now()}`;
+    const newId = generateProfileId();
     const todayStr = getLocalDateString(new Date());
     const newProfileData = {
       name: name.trim() || "Eco Hero",
+      displayName: name.trim() || "Eco Hero",
       deviceUserId: deviceUserId,
       stats: {
         totalCo2SavedKg: 0,
@@ -456,8 +463,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createProfileLocal = (name: string) => {
     const todayStr = getLocalDateString(new Date());
     const newProfile: Profile = {
-      id: `profile-${Date.now()}`,
+      id: generateProfileId(),
       name: name.trim() || "Eco Hero",
+      displayName: name.trim() || "Eco Hero",
       carbonScore: 0,
       buddyLevel: 1,
       buddyXp: 0,
@@ -548,7 +556,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             {
               id: activityRef.id,
               rawInput,
-              category: category as any,
+              category: category as ActivityLog["category"],
               co2SavedKg,
               carbonPoints: points,
               loggedAt: new Date().toISOString(),
@@ -666,9 +674,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (p.id !== currentProfileId) return p;
 
         const newLog: ActivityLog = {
-          id: `log-${Date.now()}`,
+          id: generateLogId(),
           rawInput,
-          category: category as any,
+          category: category as ActivityLog["category"],
           co2SavedKg,
           carbonPoints: points,
           loggedAt: new Date().toISOString(),
@@ -1046,7 +1054,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const q = query(collection(db, "users"), where("deviceUserId", "==", deviceUserId));
         const querySnapshot = await getDocs(q);
-        const deletePromises: Promise<any>[] = [];
+        const deletePromises: Promise<void>[] = [];
         querySnapshot.forEach((doc) => {
           deletePromises.push(deleteDoc(doc.ref));
         });

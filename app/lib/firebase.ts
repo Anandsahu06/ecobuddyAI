@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore, connectFirestoreEmulator, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "mock-api-key",
@@ -12,7 +12,7 @@ const firebaseConfig = {
 
 const isConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-let db: any = null;
+let db = null as unknown as Firestore;
 let isEmulatorActive = false;
 
 try {

@@ -1,8 +1,21 @@
 import React from "react";
 
+interface FirestoreTimestamp {
+  toDate(): Date;
+}
+
+function isFirestoreTimestamp(val: unknown): val is FirestoreTimestamp {
+  return (
+    typeof val === "object" &&
+    val !== null &&
+    "toDate" in val &&
+    typeof (val as FirestoreTimestamp).toDate === "function"
+  );
+}
+
 interface LogItem {
   id: string;
-  loggedAt: any; // Allow string, Date, or Firestore Timestamp object
+  loggedAt: Date | string | FirestoreTimestamp | unknown;
   co2SavedKg: number;
 }
 
@@ -12,16 +25,16 @@ interface HeatmapProps {
 
 export default function CarbonHeatmap({ logs }: HeatmapProps) {
   // Robust date parser to get YYYY-MM-DD in the local timezone
-  const getLocalDateString = (dateInput: any) => {
+  const getLocalDateString = (dateInput: Date | string | FirestoreTimestamp | unknown) => {
     if (!dateInput) return "";
     
     let date: Date;
     
     // Handle Firestore Timestamp objects
-    if (dateInput && typeof dateInput.toDate === "function") {
+    if (isFirestoreTimestamp(dateInput)) {
       date = dateInput.toDate();
     } else {
-      date = new Date(dateInput);
+      date = new Date(dateInput as string | number | Date);
     }
     
     if (isNaN(date.getTime())) return "";

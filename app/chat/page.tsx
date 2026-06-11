@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MessageSquare, Send, Sparkles, AlertCircle, ArrowLeft, Leaf, Award } from "lucide-react";
+import { MessageSquare, Send, Sparkles, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useApp } from "../context/app-context";
 import Navigation from "../components/navigation";
@@ -26,6 +26,10 @@ const quickChips = [
   { label: "🔌 Unplugged power strips", text: "I turned off standby appliances and unplugged power strips overnight." },
   { label: "♻️ Recycled waste", text: "I sorted and recycled paper, plastic, and metal waste today." }
 ];
+
+const generateUniqueId = (prefix: string) => {
+  return `msg-${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+};
 
 export default function ChatPage() {
   const { addLog } = useApp();
@@ -149,7 +153,7 @@ export default function ChatPage() {
 
     // Add user message
     const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}-user`,
+      id: generateUniqueId("user"),
       sender: "user",
       text: textToSend,
       timestamp: new Date()
@@ -180,7 +184,7 @@ export default function ChatPage() {
       }
 
       const buddyMsg: ChatMessage = {
-        id: `msg-${Date.now()}-buddy`,
+        id: generateUniqueId("buddy"),
         sender: "buddy",
         text: !isSavingAction
           ? `I couldn't verify this as a carbon-saving action. EcoBuddy only logs positive actions (like using public transit, hybrid/EV driving, walking/biking, plant-based food, recycling, or saving energy) that reduce carbon compared to average baselines.`
@@ -211,7 +215,7 @@ export default function ChatPage() {
       }
 
       const buddyMsg: ChatMessage = {
-        id: `msg-${Date.now()}-buddy`,
+        id: generateUniqueId("buddy"),
         sender: "buddy",
         text: !isSavingAction
           ? `I couldn't verify this as a carbon-saving action. EcoBuddy only logs positive actions (like using public transit, hybrid/EV driving, walking/biking, plant-based food, recycling, or saving energy) that reduce carbon compared to average baselines.`
@@ -237,6 +241,7 @@ export default function ChatPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/"
+          id="chat-back-btn"
           className="p-2 bg-brand-emerald/10 border border-brand-emerald/20 text-brand-emerald rounded-xl hover:bg-brand-emerald/20 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -338,6 +343,7 @@ export default function ChatPage() {
             {quickChips.map((chip, idx) => (
               <button
                 key={idx}
+                id={`chat-chip-${idx}`}
                 onClick={() => handleSendMessage(chip.text)}
                 className="whitespace-nowrap px-3.5 py-1.5 text-xs rounded-full border border-brand-emerald/15 bg-brand-emerald/5 text-text-primary hover:bg-brand-emerald/20 hover:border-brand-lime/30 transition-all font-semibold cursor-pointer shrink-0"
               >
@@ -350,6 +356,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-2 bg-brand-glass border border-brand-emerald/25 rounded-2xl px-4 py-2 shadow-inner">
             <input
               type="text"
+              id="chat-input-field"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -358,6 +365,7 @@ export default function ChatPage() {
             />
             <button
               onClick={() => handleSendMessage(inputValue)}
+              id="chat-send-btn"
               disabled={!inputValue.trim()}
               className="p-2 bg-gradient-to-r from-brand-emerald to-brand-lime text-brand-forest rounded-xl hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100 cursor-pointer shadow-md"
             >

@@ -35,6 +35,7 @@ const mockCertificates: Certificate[] = [
 
 export default function ProfilePage() {
   const { 
+    currentProfile,
     buddyLevel, 
     greenPoints, 
     equippedSkin, 
@@ -45,6 +46,15 @@ export default function ProfilePage() {
     streakShields,
     buyStreakShield
   } = useApp();
+  
+  const initials = currentProfile?.name
+    ? currentProfile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "EH";
   
   // App local settings (simulated)
   const [diet, setDiet] = useState("flexitarian");
@@ -89,11 +99,11 @@ export default function ProfilePage() {
           <div className="glass-panel rounded-3xl p-5 border border-brand-emerald/15 flex items-center gap-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-brand-emerald/5 blur-2xl pointer-events-none" />
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-emerald to-brand-lime flex items-center justify-center text-3xl shadow-lg border border-brand-emerald/10 font-bold text-brand-forest shrink-0">
-              AD
+              {initials}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-display font-black text-lg text-text-primary">Anand Dev</h2>
+                <h2 className="font-display font-black text-lg text-text-primary">{currentProfile?.name || "Eco Hero"}</h2>
                 <span className="text-[9px] font-mono px-2.5 py-0.5 rounded-full border border-brand-lime/30 text-brand-lime bg-brand-emerald/10 font-bold uppercase">
                   Level {buddyLevel} Hero
                 </span>
@@ -122,6 +132,7 @@ export default function ProfilePage() {
                   {["omnivore", "flexitarian", "vegetarian", "vegan"].map((opt) => (
                     <button
                       key={opt}
+                      id={`profile-diet-opt-${opt}`}
                       onClick={() => setDiet(opt)}
                       className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl border capitalize transition-all cursor-pointer ${
                         diet === opt
@@ -148,6 +159,7 @@ export default function ProfilePage() {
                   ].map((opt) => (
                     <button
                       key={opt.key}
+                      id={`profile-commute-opt-${opt.key}`}
                       onClick={() => setCommute(opt.key)}
                       className={`py-2 px-2 text-[10px] sm:text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                         commute === opt.key
@@ -171,6 +183,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={() => setSmartHome(!smartHome)}
+                  id="profile-utility-toggle"
                   className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                     smartHome ? "bg-brand-emerald" : "bg-toxic-grey"
                   }`}
@@ -219,6 +232,7 @@ export default function ProfilePage() {
                         alert(`Oops! You need ${150 - greenPoints} more GP. Log actions to buy shields.`);
                       }
                     }}
+                    id="profile-buy-shield-btn"
                     className={`w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       greenPoints >= 150
                         ? "bg-brand-lime text-brand-forest hover:scale-[1.02] shadow-[0_0_8px_rgba(163,230,53,0.3)]"
@@ -263,6 +277,7 @@ export default function ProfilePage() {
                       {isEquipped ? (
                         <button
                           disabled
+                          id={`profile-skin-equip-${skin.id}`}
                           className="w-full py-1.5 px-3 bg-brand-emerald/15 border border-brand-emerald/20 text-brand-lime rounded-xl text-xs font-bold flex items-center justify-center gap-1"
                         >
                           <CheckCircle className="w-3.5 h-3.5" />
@@ -271,6 +286,7 @@ export default function ProfilePage() {
                       ) : isUnlocked ? (
                         <button
                           onClick={() => equipSkin(skin.id)}
+                          id={`profile-skin-equip-${skin.id}`}
                           className="w-full py-1.5 px-3 bg-brand-emerald/25 border border-brand-emerald/30 hover:border-brand-lime text-text-primary hover:text-brand-lime rounded-xl text-xs font-bold cursor-pointer transition-all"
                         >
                           Equip Skin
@@ -284,6 +300,7 @@ export default function ProfilePage() {
                               alert(`Oops! You need ${skin.cost - greenPoints} more GP. Log actions in Chat to earn more!`);
                             }
                           }}
+                          id={`profile-skin-buy-${skin.id}`}
                           className={`w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             greenPoints >= skin.cost
                               ? "bg-brand-lime text-brand-forest hover:scale-[1.02] shadow-[0_0_8px_rgba(163,230,53,0.3)]"
@@ -322,6 +339,7 @@ export default function ProfilePage() {
                 </div>
                 <input
                   type="range"
+                  id="profile-b2b-seats-slider"
                   min="10"
                   max="1000"
                   step="10"
@@ -355,6 +373,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={handleRequestQuote}
+                  id="profile-b2b-quote-btn"
                   className="px-3.5 py-2 text-xs glow-btn rounded-xl font-bold cursor-pointer"
                 >
                   Generate Quote

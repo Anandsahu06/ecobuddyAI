@@ -16,7 +16,8 @@ export default function ClientDateTime({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted) {
@@ -24,20 +25,28 @@ export default function ClientDateTime({
     return <span className="opacity-0">00:00 AM • Jan 00</span>;
   }
 
+  let timeStr = "";
+  let dateStr = "";
+  let errorOccurred = false;
+
   try {
     const date = new Date(dateString);
-    const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const dateStr = date.toLocaleDateString([], { month: "short", day: "numeric" });
-
-    return (
-      <span>
-        {showTime && timeStr}
-        {showTime && showDate && " • "}
-        {showDate && dateStr}
-      </span>
-    );
+    timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    dateStr = date.toLocaleDateString([], { month: "short", day: "numeric" });
   } catch (error) {
     console.error("ClientDateTime error formatting date:", error);
+    errorOccurred = true;
+  }
+
+  if (errorOccurred) {
     return <span>--:--</span>;
   }
+
+  return (
+    <span>
+      {showTime && timeStr}
+      {showTime && showDate && " • "}
+      {showDate && dateStr}
+    </span>
+  );
 }

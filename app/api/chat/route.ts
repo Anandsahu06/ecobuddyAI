@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { CarbonCalculationEngine } from "../../lib/carbon-calculator";
 
 // Local fallback parser to ensure the app works 100% offline or without API keys
@@ -99,16 +99,17 @@ export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Strict schema structure to guarantee API parsing safety using strings for type fields
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const geminiSchema: any = {
-      type: "object",
+      type: SchemaType.OBJECT,
       properties: {
         category: {
-          type: "string",
+          type: SchemaType.STRING,
           enum: ["Transport", "Food", "Energy", "Waste", "None"]
         },
-        co2SavedKg: { type: "number", description: "Carbon footprint reduction in kilograms" },
-        carbonPoints: { type: "integer", description: "Points earned: 10 * co2SavedKg (minimum 1)" },
-        explanation: { type: "string", description: "Scientific explanation of calculations and factors used" }
+        co2SavedKg: { type: SchemaType.NUMBER, description: "Carbon footprint reduction in kilograms" },
+        carbonPoints: { type: SchemaType.INTEGER, description: "Points earned: 10 * co2SavedKg (minimum 1)" },
+        explanation: { type: SchemaType.STRING, description: "Scientific explanation of calculations and factors used" }
       },
       required: ["category", "co2SavedKg", "carbonPoints", "explanation"]
     };
@@ -152,14 +153,15 @@ export async function POST(request: Request) {
     try {
       const parsedJson = JSON.parse(responseText);
       return NextResponse.json({ ...parsedJson, fallback: false });
-    } catch (parseError) {
+    } catch {
       console.error("Failed to parse Gemini output as JSON, raw text was:", responseText);
       const fallbackResult = localFallbackParser(message);
       return NextResponse.json({ ...fallbackResult, fallback: true, parseError: true });
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("API Error in /api/chat route handler:", error);
-    return NextResponse.json({ error: error?.message || "Internal Server Error" }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

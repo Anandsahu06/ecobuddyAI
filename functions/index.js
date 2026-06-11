@@ -1,3 +1,4 @@
+/* eslint-disable */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -150,10 +151,13 @@ exports.aggregateGlobalLeaderboard = functions.pubsub
       const data = doc.data();
       const stats = data.stats || {};
       const buddy = data.buddy || {};
+      const buddyLevel = buddy.level || 1;
+      const buddyXp = buddy.xp || 0;
+      const cumulativeXp = 50 * buddyLevel * (buddyLevel - 1) + buddyXp;
       topPlayers.push({
         uid: doc.id,
-        name: data.displayName || "Eco Hero",
-        xp: Math.round(stats.totalCo2SavedKg * 10),
+        name: data.displayName || data.name || "Eco Hero",
+        xp: cumulativeXp,
         avatar: buddy.form === "flowering_bonsai" ? "🌳" : buddy.form === "sapling" ? "🌿" : "🌱"
       });
     });

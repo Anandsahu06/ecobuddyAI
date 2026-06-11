@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
-import { Shield, Sparkles, Lock, CheckCircle, Flame, Star, Leaf, Award } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Shield, Lock, CheckCircle, Star, Award, Users } from "lucide-react";
 import { useApp } from "../context/app-context";
 import Navigation from "../components/navigation";
 import { LevelProgression } from "../lib/level-progression";
+import { db } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 interface LevelMilestone {
   level: number;
@@ -18,21 +20,60 @@ interface LevelMilestone {
 const levelMilestones: LevelMilestone[] = [
   { level: 1, name: "Tiny Seed", xpRequired: 0, icon: "🌱", reward: "Default Companion Skin", description: "Your green journey starts here. Plant your first sustainable choices." },
   { level: 2, name: "Green Sprout", xpRequired: 100, icon: "🌱", reward: "Santa Hat accessory unlocked", description: "A small root extends! Your choices are starting to save carbon." },
-  { level: 3, name: "Sapling", xpRequired: 200, icon: "🌿", reward: "Cool Shades accessory unlocked", description: "A sturdier stem with leaves. Active transit and recycling are habits now." },
-  { level: 4, name: "Flowering Bonsai", xpRequired: 300, icon: "🌳", reward: "Royal Crown accessory unlocked", description: "Vibrant neon pink flowers bloom! You are an active carbon hero." },
-  { level: 5, name: "Planet Guardian", xpRequired: 400, icon: "👑", reward: "Reforestation Certificate (Madagascar)", description: "Ultimate eco-mastery. A real mangrove tree is planted in your name!" },
-  { level: 6, name: "Forest Steward", xpRequired: 500, icon: "🌲", reward: "150 Green Points bonus", description: "Your lifestyle saves emissions equivalent to keeping 10 trash bags out of landfills." },
-  { level: 7, name: "Eco Champion", xpRequired: 600, icon: "🛡️", reward: "Eco Champion Profile Badge", description: "A sturdy oak trunk forms. You are in the top tier of regional carbon savers." },
-  { level: 8, name: "Climate Sage", xpRequired: 700, icon: "🧙‍♂️", reward: "250 Green Points bonus", description: "Providing a green canopy. Your energy choices are fully optimized." },
-  { level: 9, name: "Ancient Redwood", xpRequired: 800, icon: "🌴", reward: "Reforestation Certificate (Canada)", description: "A giant of the forest. Massive carbon offset volume achieved!" },
-  { level: 10, name: "Eco Legend", xpRequired: 900, icon: "✨", reward: "Eco Legend profile skin", description: "Complete carbon neutrality achieved. Empowering a global community." }
+  { level: 3, name: "Sapling", xpRequired: 300, icon: "🌿", reward: "Cool Shades accessory unlocked", description: "A sturdier stem with leaves. Active transit and recycling are habits now." },
+  { level: 4, name: "Flowering Bonsai", xpRequired: 600, icon: "🌳", reward: "Royal Crown accessory unlocked", description: "Vibrant neon pink flowers bloom! You are an active carbon hero." },
+  { level: 5, name: "Planet Guardian", xpRequired: 1000, icon: "👑", reward: "Reforestation Certificate (Madagascar)", description: "Ultimate eco-mastery. A real mangrove tree is planted in your name!" },
+  { level: 6, name: "Forest Steward", xpRequired: 1500, icon: "🌲", reward: "150 Green Points bonus", description: "Your lifestyle saves emissions equivalent to keeping 10 trash bags out of landfills." },
+  { level: 7, name: "Eco Champion", xpRequired: 2100, icon: "🛡️", reward: "Eco Champion Profile Badge", description: "A sturdy oak trunk forms. You are in the top tier of regional carbon savers." },
+  { level: 8, name: "Climate Sage", xpRequired: 2800, icon: "🧙‍♂️", reward: "250 Green Points bonus", description: "Providing a green canopy. Your energy choices are fully optimized." },
+  { level: 9, name: "Ancient Redwood", xpRequired: 3600, icon: "🌴", reward: "Reforestation Certificate (Canada)", description: "A giant of the forest. Massive carbon offset volume achieved!" },
+  { level: 10, name: "Eco Legend", xpRequired: 4500, icon: "✨", reward: "Eco Legend profile skin", description: "Complete carbon neutrality achieved. Empowering a global community." }
 ];
 
 export default function LevelsPage() {
-  const { buddyLevel, buddyXp, streak, greenPoints } = useApp();
+  const { currentProfile, buddyLevel, buddyXp } = useApp();
+ 
+  // Calculate cumulative XP: 50 * level * (level - 1) + current level's XP (matching scaling LevelProgression)
+  const cumulativeXp = 50 * buddyLevel * (buddyLevel - 1) + buddyXp;
 
-  // Calculate cumulative XP: 100 XP per level + current level's XP
-  const cumulativeXp = (buddyLevel - 1) * 100 + buddyXp;
+  const [leaderboard, setLeaderboard] = useState<Array<{ name: string; xp: number; avatar: string; uid: string }>>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        if (db) {
+          const docRef = doc(db, "leaderboards", "global_cohort");
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data && Array.isArray(data.topPlayers)) {
+              setLeaderboard(data.topPlayers);
+              setLoadingLeaderboard(false);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to fetch leaderboard from Firestore, using mock fallback", error);
+      }
+      
+      // Fallback Mock data
+      const mockPlayers = [
+        { uid: "1", name: "Sophia Verde", xp: 850, avatar: "🌳" },
+        { uid: "2", name: "Marcus Leaf", xp: 620, avatar: "🌿" },
+        { uid: "current", name: `${currentProfile?.name || "Eco Hero"} (You)`, xp: cumulativeXp, avatar: buddyLevel >= 4 ? "🌳" : buddyLevel === 3 ? "🌿" : "🌱" },
+        { uid: "4", name: "Elena Solar", xp: 210, avatar: "🌱" },
+        { uid: "5", name: "Lucas Recycle", xp: 95, avatar: "🌱" }
+      ];
+      // Sort players by XP descending
+      mockPlayers.sort((a, b) => b.xp - a.xp);
+      setLeaderboard(mockPlayers);
+      setLoadingLeaderboard(false);
+    };
+
+    fetchLeaderboard();
+  }, [cumulativeXp, buddyLevel]);
 
   return (
     <Navigation>
@@ -101,12 +142,14 @@ export default function LevelsPage() {
         </div>
       </div>
 
-      {/* Levels Timeline Map */}
-      <div className="glass-panel rounded-3xl border border-brand-emerald/15 p-5 md:p-8 max-w-3xl mx-auto space-y-6 relative">
-        <h3 className="font-display font-bold text-sm text-text-secondary uppercase tracking-wider mb-6 flex items-center gap-1.5 border-b border-brand-emerald/10 pb-3">
-          <Award className="w-4.5 h-4.5 text-brand-emerald" />
-          EcoBuddy Level Roadmap
-        </h3>
+      {/* Grid Layout: Timeline Roadmap + Leaderboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start max-w-6xl mx-auto">
+        {/* Timeline Roadmap (8 cols) */}
+        <div className="lg:col-span-8 glass-panel rounded-3xl border border-brand-emerald/15 p-5 md:p-8 space-y-6 relative">
+          <h3 className="font-display font-bold text-sm text-text-secondary uppercase tracking-wider mb-6 flex items-center gap-1.5 border-b border-brand-emerald/10 pb-3">
+            <Award className="w-4.5 h-4.5 text-brand-emerald" />
+            EcoBuddy Level Roadmap
+          </h3>
 
         {/* Timeline track */}
         <div className="relative pl-8 border-l border-brand-emerald/20 space-y-6">
@@ -172,6 +215,58 @@ export default function LevelsPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+        {/* Community Leaderboard (4 cols) */}
+        <div className="lg:col-span-4 glass-panel rounded-3xl border border-brand-emerald/15 p-5 space-y-4">
+          <h3 className="font-display font-bold text-sm text-text-secondary uppercase tracking-wider flex items-center gap-1.5 border-b border-brand-emerald/10 pb-3">
+            <Users className="w-4.5 h-4.5 text-brand-emerald" />
+            Global Rankings
+          </h3>
+
+          {loadingLeaderboard ? (
+            <div className="py-12 flex flex-col items-center justify-center">
+              <div className="w-6 h-6 border-2 border-brand-emerald border-t-transparent rounded-full animate-spin" />
+              <p className="text-[10px] font-mono text-text-secondary mt-2 uppercase">Syncing Leaderboard...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {leaderboard.map((player, idx) => {
+                const isCurrentUser = player.uid === "current";
+                return (
+                  <div
+                    key={player.uid}
+                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${
+                      isCurrentUser
+                        ? "bg-brand-emerald/10 border-brand-lime shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+                        : "bg-brand-forest/40 border-white/5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-black text-text-secondary w-4">
+                        #{idx + 1}
+                      </span>
+                      <span className="text-xl bg-brand-emerald/5 p-1 rounded-lg border border-brand-emerald/10 shrink-0">
+                        {player.avatar}
+                      </span>
+                      <div>
+                        <p className={`text-xs font-bold ${isCurrentUser ? "text-brand-lime" : "text-text-primary"}`}>
+                          {player.name}
+                        </p>
+                        <p className="text-[9px] text-text-secondary mt-0.5 uppercase font-mono">
+                          {player.xp >= 300 ? "Redwood" : player.xp >= 200 ? "Sapling" : "Seedling"} Tier
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-brand-lime font-mono">{player.xp} XP</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </Navigation>

@@ -9,7 +9,7 @@ import { useApp } from "../context/app-context";
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const navItems: NavItem[] = [
@@ -26,8 +26,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
     streak, 
     profiles, 
     currentProfileId, 
-    switchProfile, 
-    createProfile 
+    switchProfile 
   } = useApp();
 
   const handleProfileChange = (val: string) => {
@@ -59,6 +58,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <select
             value={currentProfileId}
             onChange={(e) => handleProfileChange(e.target.value)}
+            id="profile-select-desktop"
             className="w-full bg-brand-forest/60 border border-brand-emerald/25 text-xs text-brand-lime rounded-xl px-2 py-2 focus:outline-none cursor-pointer font-bold"
           >
             {profiles.map((p) => (
@@ -92,6 +92,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
               <Link
                 key={item.href}
                 href={item.href}
+                id={`nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 font-semibold group ${
                   isActive
                     ? "bg-brand-emerald/20 text-brand-lime border-l-4 border-brand-lime pl-3"
@@ -123,6 +124,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
           <select
             value={currentProfileId}
             onChange={(e) => handleProfileChange(e.target.value)}
+            id="profile-select-mobile"
             className="bg-transparent border-none text-xs font-bold text-brand-lime focus:outline-none cursor-pointer"
           >
             {profiles.map((p) => (
@@ -155,6 +157,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
             <Link
               key={item.href}
               href={item.href}
+              id={`nav-link-mobile-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${
                 isActive
                   ? "bg-brand-emerald/15 text-brand-lime"
