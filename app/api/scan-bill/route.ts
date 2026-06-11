@@ -56,8 +56,7 @@ export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const responseSchema: any = {
+    const responseSchema = {
       type: SchemaType.OBJECT,
       properties: {
         providerName: { type: SchemaType.STRING },
@@ -74,7 +73,8 @@ export async function POST(request: Request) {
       model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: responseSchema,
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        responseSchema: responseSchema as any,
       }
     });
 

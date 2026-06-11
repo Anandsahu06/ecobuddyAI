@@ -99,8 +99,7 @@ export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Strict schema structure to guarantee API parsing safety using strings for type fields
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    const geminiSchema: any = {
+    const geminiSchema = {
       type: SchemaType.OBJECT,
       properties: {
         category: {
@@ -142,7 +141,8 @@ export async function POST(request: Request) {
       model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: geminiSchema,
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        responseSchema: geminiSchema as any,
       },
       systemInstruction: systemInstruction
     });
