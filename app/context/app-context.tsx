@@ -62,6 +62,7 @@ export interface Profile {
   buddyLevel: number;
   buddyXp: number;
   streak: number;
+  longestStreak?: number;
   greenPoints: number;
   equippedSkin: string;
   unlockedSkins: string[];
@@ -243,6 +244,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             buddyLevel: data.buddy?.level || 1,
             buddyXp: data.buddy?.xp || 0,
             streak: data.stats?.currentStreak || 0,
+            longestStreak: data.stats?.longestStreak || 0,
             greenPoints: data.greenPoints || 0,
             equippedSkin: data.equippedSkin || "default",
             unlockedSkins: data.unlockedSkins || ["default"],
@@ -460,6 +462,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       buddyLevel: 1,
       buddyXp: 0,
       streak: 0,
+      longestStreak: 0,
       greenPoints: 0,
       equippedSkin: "default",
       unlockedSkins: ["default"],
@@ -606,6 +609,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           };
         });
 
+        // Calculate streak (client side for cloud mode)
+        let newStreak = currentProfile.streak || 0;
+        let currentShields = currentProfile.streakShields || 0;
+        const todayStr = getLocalDateString(new Date());
+
+        if (logs.length === 0) {
+          newStreak = 1;
+        } else {
+          const lastLogDate = getLocalDateString(new Date(logs[0].loggedAt));
+          if (lastLogDate !== todayStr) {
+            const diffTime = new Date(todayStr).getTime() - new Date(lastLogDate).getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) {
+              newStreak += 1;
+            } else if (diffDays > 1) {
+              if (currentShields > 0) {
+                currentShields -= 1;
+                newStreak += 1;
+              } else {
+                newStreak = 1;
+              }
+            }
+          }
+        }
+        const newLongestStreak = Math.max(newStreak, currentProfile.longestStreak || currentProfile.streak || 0);
+
         // 3. Update client-managed properties in the profile document in Firestore
         await updateDoc(profileRef, {
           greenPoints: updatedGp,
@@ -615,6 +644,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "buddy.level": updatedLvl,
           "buddy.form": updatedForm,
           "stats.totalCo2SavedKg": expectedScore,
+          "stats.currentStreak": newStreak,
+          "stats.longestStreak": newLongestStreak,
+          "stats.lastLoggedDate": todayStr,
+          streakShields: currentShields,
         });
       } catch (e) {
         console.error("Firestore addLog error, falling back to local:", e);
@@ -726,6 +759,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           buddyLevel: updatedLvl,
           buddyXp: updatedXp,
           streak: newStreak,
+          longestStreak: Math.max(newStreak, p.longestStreak || p.streak || 0),
           badges: updatedBadges,
           quests: updatedQuests,
           streakShields: currentShields,
