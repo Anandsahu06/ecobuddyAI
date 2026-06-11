@@ -78,11 +78,14 @@ exports.onActivityCreated = functions.firestore
         let newLevel = currentBuddy.level;
         let newForm = currentBuddy.form;
         let didLevelUp = false;
+        let gpBonus = 0;
 
         let neededXp = newLevel * 100;
         while (newXp >= neededXp) {
           newXp = newXp - neededXp;
           newLevel += 1;
+          if (newLevel === 6) gpBonus += 150;
+          if (newLevel === 8) gpBonus += 250;
           didLevelUp = true;
           neededXp = newLevel * 100;
 
@@ -96,8 +99,12 @@ exports.onActivityCreated = functions.firestore
           }
         }
 
+        const currentGp = userData.greenPoints || 0;
+        const newGp = currentGp + pointsAwarded * 10 + gpBonus;
+
         // 4. Update the Parent User Profile
         transaction.update(userRef, {
+          greenPoints: newGp,
           "stats.totalCo2SavedKg": newTotalCo2,
           "stats.currentStreak": newStreak,
           "stats.longestStreak": newLongestStreak,

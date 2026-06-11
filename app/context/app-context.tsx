@@ -373,9 +373,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let updatedXp = currentProfile.buddyXp;
     let updatedLvl = currentProfile.buddyLevel;
     let neededXp = LevelProgression.getXpForLevel(updatedLvl);
+    let gpBonus = 0;
     while (updatedXp >= neededXp) {
       updatedXp -= neededXp;
       updatedLvl += 1;
+      if (updatedLvl === 6) gpBonus += 150;
+      if (updatedLvl === 8) gpBonus += 250;
       neededXp = LevelProgression.getXpForLevel(updatedLvl);
       needsUpdate = true;
     }
@@ -398,6 +401,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           "buddy.level": updatedLvl,
           "buddy.xp": updatedXp,
           "buddy.form": updatedForm,
+          greenPoints: currentProfile.greenPoints + gpBonus,
         }).catch((err) => {
           console.error("Error updating profile rotation/level in Firestore:", err);
         });
@@ -413,6 +417,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               lastQuestRefreshDate: updatedRefreshDate,
               buddyLevel: updatedLvl,
               buddyXp: updatedXp,
+              greenPoints: p.greenPoints + gpBonus,
             };
           });
           localStorage.setItem("ecobuddy_profiles", JSON.stringify(updated));
@@ -552,8 +557,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
 
         // 2. Perform frontend calculated badges, quests, and GP logic
-        const updatedGp = currentProfile.greenPoints + points * 10;
-
         const updatedBadges = currentProfile.badges.map((b) => {
           if (b.id === "1") return { ...b, unlocked: true };
 
@@ -583,12 +586,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         let updatedXp = currentProfile.buddyXp + points * 3;
         let updatedLvl = currentProfile.buddyLevel;
         let neededXp = LevelProgression.getXpForLevel(updatedLvl);
+        let gpBonus = 0;
 
         while (updatedXp >= neededXp) {
           updatedXp -= neededXp;
           updatedLvl += 1;
+          if (updatedLvl === 6) gpBonus += 150;
+          if (updatedLvl === 8) gpBonus += 250;
           neededXp = LevelProgression.getXpForLevel(updatedLvl);
         }
+
+        const updatedGp = currentProfile.greenPoints + points * 10 + gpBonus;
 
         let updatedForm = "seed";
         if (updatedLvl >= 4) {
@@ -690,18 +698,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
         const updatedLogs = [newLog, ...p.logs];
         const updatedScore = parseFloat((p.carbonScore + co2SavedKg).toFixed(2));
-        const updatedGp = p.greenPoints + points * 10;
 
         // Level calculations
         let updatedXp = p.buddyXp + points * 3;
         let updatedLvl = p.buddyLevel;
         let neededXp = LevelProgression.getXpForLevel(updatedLvl);
+        let gpBonus = 0;
 
         while (updatedXp >= neededXp) {
           updatedXp -= neededXp;
           updatedLvl += 1;
+          if (updatedLvl === 6) gpBonus += 150;
+          if (updatedLvl === 8) gpBonus += 250;
           neededXp = LevelProgression.getXpForLevel(updatedLvl);
         }
+
+        const updatedGp = p.greenPoints + points * 10 + gpBonus;
 
         // Streak check
         let newStreak = p.streak;
